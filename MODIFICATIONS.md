@@ -1,14 +1,55 @@
 # Modifications
 
-This file lists the changes in this repository compared with the original **Ultimate Macro** by **Darksen**
-([DarksenDev/tds-macro](https://github.com/DarksenDev/tds-macro)), version **1.3.3**.
-
+This file lists the changes in this repository compared with the versions they are based on.
 It is included as required by **GPLv3, Section 5(a)**: modified versions must carry a prominent notice
 that they were modified, along with the relevant date.
 
-All changes are in `TDS_Macro/Main.ahk`. Other files are unchanged from the original.
+| Folder | Based on |
+|---|---|
+| `TDS_Macro_Night3HardMode/` | **Ultimate Macro 1.3.4a** ("New Era", [UltimateMacro/Ultimate-Macro-New-Era](https://github.com/UltimateMacro/Ultimate-Macro-New-Era)) with Night 3 support, originally by **Darksen** |
+| `TDS_Macro/` | **Ultimate Macro 1.3.3** by **Darksen** ([DarksenDev/tds-macro](https://github.com/DarksenDev/tds-macro)) |
 
 ---
+
+# `TDS_Macro_Night3HardMode/` (1.3.4a + Night 3)
+
+Changes are in `Main.ahk` and `.gitignore`. Other files are unchanged from the version received.
+
+## November 18, 2026
+
+### 1. Drop the Beat cooldown setting (decimals allowed)
+- **Before:** the cooldown was hard-coded to 28 seconds (`28000 / multiplier`) in `UseAbilitiesPass()`.
+- **After:**
+  - New **"Beat Cooldown (sec):"** field in the **Settings** tab (below the Hologram/Reposition keybinds), with a `?` help button. It is hidden on the *Advanced settings* page like the other keybind controls.
+  - New `ParseBeatCooldown()` helper. It accepts `28`, `28.5`, or `28,5`. Empty, invalid, or below 1 falls back to **28**, and the maximum is 600.
+  - The value is saved as `BeatCooldown` in the `[Options]` section of `%AppData%\Ultimate_Macro\Options\Settings.tds`.
+  - `UseAbilitiesPass()` now uses `BeatCooldown * 1000 / multiplier`, so timescale is still applied.
+
+### 2. DJ track switching: hover before click
+- **Before:** `SetDJTrack()` called `Click(DJTrack.x, DJTrack.y)` directly. Roblox can ignore a click that lands the same instant the mouse arrives.
+- **After:** the mouse moves to the button, waits about 150 ms, nudges 1 pixel and back, then calls the same `Click(DJTrack.x, DJTrack.y)`. The existing retry, cooldown, and deadline logic is unchanged.
+
+### 3. Offline dependencies
+- Removed `/lib/OCR.ahk` and `/lib/JSON.ahk` from `.gitignore`, so both files are committed with the repository. Without them the macro tries to download them on first launch. Both are MIT licensed.
+
+### 4. Modification notice
+- Added a comment at the top of `Main.ahk` saying this is a modified version. The original credit comment and the in-app Credits tab are **unchanged**.
+
+### Not changed (already in 1.3.4a)
+- Support Caravan no longer blocks Drop the Beat (same fix as `TDS_Macro/` item 2).
+- Upgrade Delay is saved correctly from Settings.
+- The Drop the Beat stun retry is limited to 3 attempts.
+
+### Checks run
+- AutoHotkey v2 `/validate` passes (installed and bundled `AutoHotkey64.exe`).
+- Upstream `tests/test_source_contracts.py` passes, and the DJ/ability checks in `tests/test_reported_runtime_fixes.py` pass.
+- `tests/test_reported_runtime_fixes.py` as a whole already failed before these changes, on an unrelated Night launch check (`CheckTheMapF`).
+
+---
+
+# `TDS_Macro/` (1.3.3)
+
+All changes are in `TDS_Macro/Main.ahk`. Other files are unchanged from the original.
 
 ## November 2026
 
