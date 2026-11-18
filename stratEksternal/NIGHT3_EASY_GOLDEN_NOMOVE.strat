@@ -1,0 +1,103 @@
+[Settings]
+map=gubby
+difficulty=Night
+eventDifficulty=Easy
+requiredTowers=Assassin, Commander, Juggernaut, Golden Crook, DJ
+modifiers=
+autoChain=OFF
+autoCaravan=ON
+autoDropTheBeat=ON
+autoSkip=ON
+abilitySpam=ON
+moveEnabled=0
+moveDirection=S
+moveDuration=2000
+
+[DO NOT EDIT]
+width=1920
+height=1009
+
+[Steps]
+Send("right", hold:=650)
+Sleep(1000)
+SpawnTower(1488, 663, 1, Assassin1)
+UpgradeTower(Assassin1)
+UpgradeTower(Assassin1)
+SpawnTower(1541, 686, 1, Assassin2)
+UpgradeTower(Assassin2)
+UpgradeTower(Assassin2)
+SpawnTower(1590, 696, 1, Assassin3)
+UpgradeTower(Assassin3)
+UpgradeTower(Assassin3)
+SpawnTower(1360, 648, 4, Golden Crook1)
+UpgradeTower(Golden Crook1)
+SpawnTower(1371, 589, 4, Golden Crook2)
+UpgradeTower(Golden Crook2)
+SpawnTower(1368, 738, 5, DJ)
+UpgradeTower(DJ)
+UpgradeTower(DJ)
+UpgradeTower(DJ)
+SetDJTrack("Green")
+UpgradeTower(Assassin1)
+UpgradeTower(Assassin2)
+UpgradeTower(Assassin3)
+SpawnTower(1497, 621, 1, Assassin4)
+UpgradeTower(Assassin4)
+UpgradeTower(Assassin4)
+UpgradeTower(Assassin4)
+SpawnTower(1533, 650, 1, Assassin5)
+UpgradeTower(Assassin5)
+UpgradeTower(Assassin5)
+UpgradeTower(Assassin5)
+SpawnTower(1504, 577, 1, Assassin6)
+UpgradeTower(Assassin6)
+UpgradeTower(Assassin6)
+UpgradeTower(Assassin6)
+UpgradeTower(Golden Crook1)
+UpgradeTower(Golden Crook2)
+SpawnTower(1250, 558, 4, Golden Crook3)
+UpgradeTower(Golden Crook3)
+UpgradeTower(Golden Crook3)
+SpawnTower(1249, 625, 4, Golden Crook4)
+UpgradeTower(Golden Crook4)
+UpgradeTower(Golden Crook4)
+SpawnTower(1366, 408, 4, Golden Crook5)
+UpgradeTower(Golden Crook5)
+UpgradeTower(Golden Crook5)
+SpawnTower(1298, 686, 2, Commander1)
+UpgradeTower(Commander1)
+UpgradeTower(Assassin1)
+UpgradeTower(Assassin1)
+UpgradeTower(Assassin2)
+UpgradeTower(Assassin4)
+UpgradeTower(Assassin5)
+UpgradeTower(Assassin3)
+UpgradeTower(Assassin6)
+UpgradeTower(Commander1)
+Commander := true
+UpgradeTower(Commander1)
+UpgradeTower(Golden Crook4)
+UpgradeTower(Golden Crook1)
+UpgradeTower(Golden Crook2)
+UpgradeTower(Golden Crook3)
+UpgradeTower(Golden Crook5)
+UpgradeTower(Commander1)
+UpgradeTower(DJ)
+UpgradeTower(DJ)
+SetDJTrack("Red")
+SpawnTower(1170, 600, 3, Juggernaut1)
+SpawnTower(1179, 496, 3, Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Juggernaut1)
+UpgradeTower(Golden Crook4)
+UpgradeTower(Golden Crook1)
+UpgradeTower(Golden Crook2)
+UpgradeTower(Golden Crook3)
+UpgradeTower(Golden Crook5)
+Send("right", hold:=2500)
+Sleep(1000)
+

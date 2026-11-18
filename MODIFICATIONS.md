@@ -6,8 +6,44 @@ that they were modified, along with the relevant date.
 
 | Folder | Based on |
 |---|---|
+| `SolarRequiem/` | **"SolarRequiem"**: Ultimate Macro 1.3.4a ("New Era") with Night 3 and Night 4 support, shared by another player, originally by **Darksen** |
 | `TDS_Macro_Night3HardMode/` | **Ultimate Macro 1.3.4a** ("New Era", [UltimateMacro/Ultimate-Macro-New-Era](https://github.com/UltimateMacro/Ultimate-Macro-New-Era)) with Night 3 support, originally by **Darksen** |
 | `TDS_Macro/` | **Ultimate Macro 1.3.3** by **Darksen** ([DarksenDev/tds-macro](https://github.com/DarksenDev/tds-macro)) |
+
+---
+
+# `SolarRequiem/` (1.3.4a + Night 3 + Night 4)
+
+Changes are in `Main.ahk` and `.gitignore`. Other files are unchanged from the version received.
+The received copy was nested in a `SolarRequiem - Copy/` subfolder. Its contents were moved up to `SolarRequiem/`.
+
+## November 19, 2026
+
+### What SolarRequiem already added (not my work)
+Compared with `TDS_Macro_Night3HardMode/`, SolarRequiem adds Night 4:
+- New `N4` mode in the Record tab difficulty list (strategy: `difficulty=N4`).
+- New `IsNightMode()` helper. Every place that checked `difficulty = "Night"` now treats `Night` and `N4` the same way (lobby, Ready, loadout, cutscene skip, Return To Lobby, loss handling).
+- Night 4 card detection with `Resources/Night4.png` and OCR text "Night 4", plus variant images `Night4Easy.png` / `Night4Hard.png`.
+
+### 1. Drop the Beat cooldown setting (decimals allowed)
+Same as `TDS_Macro_Night3HardMode/` item 1: **"Beat Cooldown (sec):"** field in Settings, `ParseBeatCooldown()` (accepts `28`, `28.5`, `28,5`; default 28; max 600), saved as `BeatCooldown`, and used by `UseAbilitiesPass()` instead of `28000`.
+
+### 2. DJ track switching: hover before click
+Same as `TDS_Macro_Night3HardMode/` item 2.
+
+### 3. Bug fixes in the SolarRequiem changes
+- **Arcade card image path:** `TryClickArcadeTarget()` built the path as `... ".png" ".png"` (for example `Pizza Party.png.png`). That file never exists, so Arcade/Trial image detection always failed and fell back to OCR. Now uses a single `.png`.
+- **Night variant state:** `SelectNightVariant()` dropped the line `eventDifficulty := targetName`. Restored, same as the Night 3 version.
+- **Indentation:** several Night blocks in `RunStrategy()`, `PlayStrategy()`, `TryClickDifficultyTarget()`, `SelectNightVariant()`, and `JoinGame()` had broken indentation (and tabs mixed with spaces). Re-indented with the original comments restored. Whitespace and comments only, no logic change.
+
+### 4. Offline dependencies and notice
+- Same as `TDS_Macro_Night3HardMode/` items 3 and 4: `lib/OCR.ahk` and `lib/JSON.ahk` are committed, and `Main.ahk` has a modified-version notice. The original credit comment and the in-app Credits tab are unchanged.
+
+### Checks run
+- AutoHotkey v2 `/validate` passes (installed and bundled `AutoHotkey64.exe`).
+- Upstream `tests/test_source_contracts.py` and `tests/lint_strategies.py` pass, and the DJ/ability checks in `tests/test_reported_runtime_fixes.py` pass.
+- `tests/test_reported_runtime_fixes.py` as a whole fails on the same Night launch check (`CheckTheMapF`) as the Night 3 version did before any of my changes.
+- Not tested in-game yet.
 
 ---
 

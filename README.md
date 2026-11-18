@@ -4,6 +4,7 @@
 > This repository is a **modified version** of **Ultimate Macro** for Tower Defense Simulator.
 > - Original creator: **Darksen** ([DarksenDev/tds-macro](https://github.com/DarksenDev/tds-macro))
 > - Newer version (1.3.4a "New Era") and Night 3 support: the **Ultimate Macro: New Era** team and contributors ([UltimateMacro/Ultimate-Macro-New-Era](https://github.com/UltimateMacro/Ultimate-Macro-New-Era))
+> - Night 4 support: the **"SolarRequiem"** version, shared by another player (author not named in the files)
 >
 > All credit for the macro goes to them. I only made a few small fixes for my own use. The full list is in [MODIFICATIONS.md](MODIFICATIONS.md).
 
@@ -16,7 +17,7 @@
 Main features (from the original macro):
 
 - **Record & play strategies**: record tower placement, upgrades, and actions, then replay them.
-- **Night 3 support** (Easy/Hard): Night card and variant selection, loadout, Ready, cutscene skip, and Return To Lobby (in `TDS_Macro_Night3HardMode`).
+- **Night 3 and Night 4 support** (Easy/Hard): Night card and variant selection, loadout, Ready, cutscene skip, and Return To Lobby (Night 4 only in `SolarRequiem`).
 - **Automatic game handling**: detects when a game ends, checks the map, and clicks *Restart* / *Play Again*.
 - **Strategy rotation**, **auto-equip towers**, **Timescale** (1.5x / 2x) support, and **playtime rewards** collection.
 - **Auto abilities**: Call of Arms, Support Caravan, Drop the Beat, auto skip wave.
@@ -26,8 +27,9 @@ Main features (from the original macro):
 
 | Folder | Version | Use it for |
 |---|---|---|
-| **`TDS_Macro_Night3HardMode/`** | 1.3.4a (New Era) + Night 3 + my changes | **Recommended.** Newest version, supports Night 3 and normal modes. |
-| `TDS_Macro/` | 1.3.3 (Darksen) + my changes | Older version, kept for reference. No Night support. |
+| **`SolarRequiem/`** | 1.3.4a (New Era) + Night 3 + **Night 4** + my changes | **Recommended.** Newest version. Supports Night 3, Night 4, and normal modes. |
+| `TDS_Macro_Night3HardMode/` | 1.3.4a (New Era) + Night 3 + my changes | Previous version, kept for reference. No Night 4. |
+| `TDS_Macro/` | 1.3.3 (Darksen) + my changes | Oldest version, kept for reference. No Night support. |
 
 ## What is different in this version
 
@@ -35,20 +37,22 @@ A short summary (details and dates are in [MODIFICATIONS.md](MODIFICATIONS.md)):
 
 1. **The Drop the Beat cooldown can be set from Settings.** New *Beat Cooldown (sec)* field in the Settings tab. Default is 28, and decimals are allowed (for example `28.5`, or `28,5`).
 2. **More reliable DJ track switching (Red/Green).** The mouse hovers over the button briefly before clicking, so Roblox registers the click.
-3. **Drop the Beat is no longer blocked by Support Caravan.** This fix is in `TDS_Macro/`. The New Era version already includes the same fix.
+3. **Arcade card fix (`SolarRequiem/`).** The SolarRequiem version looked for `<card>.png.png`, so Arcade image detection always failed. Fixed.
+4. **Drop the Beat is no longer blocked by Support Caravan.** This fix is in `TDS_Macro/`. The New Era versions already include the same fix.
 
 ## Folder structure
 
 ```
 .
-├── TDS_Macro_Night3HardMode/   # Recommended: 1.3.4a + Night 3 (modified)
+├── SolarRequiem/               # Recommended: 1.3.4a + Night 3 + Night 4 (modified)
 │   ├── Main.ahk                # Main script, run this
 │   ├── lib/                    # Helper libraries (Gdip, OCR, JSON, ImageSearch, etc.)
-│   ├── Resources/              # Images for screen detection, maps, sample strats
+│   ├── Resources/              # Images for screen detection (incl. Night3*/Night4*.png)
 │   ├── submacros/              # Watchdog, updater, auto CoA/spin/consumable
 │   ├── tests/, tools/          # Upstream validation scripts
 │   └── LICENSE                 # GPLv3 (upstream)
-├── TDS_Macro/                  # Older 1.3.3 version (modified)
+├── TDS_Macro_Night3HardMode/   # Previous 1.3.4a + Night 3 version (modified)
+├── TDS_Macro/                  # Oldest 1.3.3 version (modified)
 ├── stratEksternal/             # Strategies made by other people (see Credits)
 ├── LICENSE                     # GPLv3 (same as the original project)
 ├── MODIFICATIONS.md            # List of changes from the originals
@@ -67,9 +71,18 @@ A short summary (details and dates are in [MODIFICATIONS.md](MODIFICATIONS.md)):
 
 1. Download/clone this repository, then **extract** it if it is a ZIP. The macro refuses to run from inside a ZIP.
 2. Install **AutoHotkey v2**.
-3. Run `TDS_Macro_Night3HardMode/Main.ahk`.
+3. Run `SolarRequiem/Main.ahk`.
 4. Set your keybinds and **Beat Cooldown** in the **Settings** tab, then click **Save all settings**.
 5. Pick or record a strategy, then start it.
+
+**Night strategies** need the mode and the Easy/Hard variant in `[Settings]`. The macro refuses to start if `eventDifficulty` is missing:
+
+| Mode | `difficulty=` | `eventDifficulty=` |
+|---|---|---|
+| Night 3 | `Night` | `Easy` or `Hard` |
+| Night 4 | `N4` | `Easy` or `Hard` |
+
+Examples: `stratEksternal/NIGHT3EASYREBORN.strat` (Night 3) and `stratEksternal/Night4uwu.strat` (Night 4).
 
 **Ability settings live in the strategy file.** Auto Call of Arms only runs if the `.strat` file has `autoChain=ON` (and Support Caravan needs `autoCaravan=ON`, Drop the Beat needs `autoDropTheBeat=ON`):
 
@@ -94,7 +107,7 @@ autoDropTheBeat=ON
   - Discord: [discord.gg/DQnc2JDJtr](https://discord.gg/DQnc2JDJtr)
   - If you like this macro, please support the original author: [donate to Darksen](https://www.donationalerts.com/r/darksen1).
 
-### Ultimate Macro: New Era (version 1.3.4a, used as the base of `TDS_Macro_Night3HardMode`)
+### Ultimate Macro: New Era (version 1.3.4a, the base of `SolarRequiem` and `TDS_Macro_Night3HardMode`)
 - GitHub: [UltimateMacro/Ultimate-Macro-New-Era](https://github.com/UltimateMacro/Ultimate-Macro-New-Era)
 - Team, as listed in the macro's Credits tab:
   - Original Creator: Darksen
@@ -103,6 +116,7 @@ autoDropTheBeat=ON
   - Development Contributor: 4riff
   - QA: hetzel401, tristanm1ce, frostzzz
 - **Night 3 support:** I got this version from another player. The files don't say who added Night 3, so the credit goes to the New Era team and contributors above. If you added Night 3 support, please open an *issue* so your name can be added.
+- **Night 4 support ("SolarRequiem"):** also shared by another player. It adds the `N4` mode, the `Night4*.png` images, and the `IsNightMode()` helper. The author isn't named in the files. If you made it, please open an *issue* so your name can be added.
 
 ### Libraries used (included in `lib/`)
 - **AutoHotkey** — [autohotkey.com](https://www.autohotkey.com/)
@@ -118,7 +132,7 @@ All of these belong to their respective authors and follow each one's license. S
 ### Strategies in `stratEksternal/`
 These strategies were **not made by me**:
 - **Fallen Down** (Cataclysm, Fallen; V4, V5-STABLE, and variants) — by **menz.7**. The `FallenDown_byMenzModified` file is a modified version of their strategy.
-- `PikaBoo1.5.1N.strat`, `solo frost ss.strat`, and the `strategy-lab` file — I don't know who made them. They were downloaded from the community.
+- `PikaBoo1.5.1N.strat`, `solo frost ss.strat`, the `strategy-lab` file, and the Night strategies (`NIGHT3EASYREBORN.strat`, `NIGHT3_EASY_GOLDEN_NOMOVE.strat`, `Night4uwu.strat`) — I don't know who made them. They were shared by the community.
 
 If you made any of these strategies and want your name added or the file removed, please open an *issue* on this repository.
 
@@ -136,6 +150,6 @@ That means:
 
 ## Disclaimer
 
-- This project is **not affiliated** with Roblox, Paradoxum Games (TDS developer), Darksen, or the Ultimate Macro: New Era team.
+- This project is **not affiliated** with Roblox, Paradoxum Games (TDS developer), Darksen, the Ultimate Macro: New Era team, or the authors of the Night 3 / Night 4 versions.
 - Using a macro may violate the rules of Roblox or the game. **Use it at your own risk.**
 - No warranty of any kind (see the GPLv3 license).
