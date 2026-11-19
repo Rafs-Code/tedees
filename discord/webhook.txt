@@ -1,0 +1,2 @@
+log hook channel: https://discord.com/api/webhooks/1572411933741555924/AV3-zkze09R7HZXQqLTMOHjKxEPMXw4U0LVvKmV-ORC4W5PSBd8und1Hkh7T6ki5WQ-2
+log hook history win/lose: https://discord.com/api/webhooks/1572578143254880356/doXLPEQ2wKOkkSTsL7cuvGp_8ReHSDpS0j2S2D2bR8CM-kuDK5FJeOVk8oY9khT0xa7X
