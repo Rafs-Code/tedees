@@ -38,7 +38,9 @@ A short summary (details and dates are in [MODIFICATIONS.md](MODIFICATIONS.md)):
 1. **The Drop the Beat cooldown can be set from Settings.** New *Beat Cooldown (sec)* field in the Settings tab. Default is 28, and decimals are allowed (for example `28.5`, or `28,5`).
 2. **More reliable DJ track switching (Red/Green).** The mouse hovers over the button briefly before clicking, so Roblox registers the click.
 3. **Arcade card fix (`SolarRequiem/`).** The SolarRequiem version looked for `<card>.png.png`, so Arcade image detection always failed. Fixed.
-4. **Drop the Beat is no longer blocked by Support Caravan.** This fix is in `TDS_Macro/`. The New Era versions already include the same fix.
+4. **Hacker clone retry set in Settings (`SolarRequiem/`).** After a failed clone (no cash, cooldown, stunned, cannot place), the macro retries after the *Clone Retry* value: **OFF** (default 4.65 s) and **2x** (default 1.25 s) can be set in the Settings tab, and 1.5x is calculated automatically (OFF ÷ 1.5).
+5. **Night cutscene skip fixed (`SolarRequiem/`).** After the last strategy step the macro keeps watching (up to 15 minutes) and holds every HOLD TO SKIP button until Return To Lobby is clicked. The hold now hovers first and checks that the button actually disappeared, retrying up to 3 times.
+6. **Drop the Beat is no longer blocked by Support Caravan.** This fix is in `TDS_Macro/`. The New Era versions already include the same fix.
 
 ## Folder structure
 

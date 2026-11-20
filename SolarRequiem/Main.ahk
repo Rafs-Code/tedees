@@ -16,7 +16,8 @@
 ;   (https://github.com/DarksenDev/tds-macro).
 ;   Changes: configurable Drop the Beat cooldown (decimals allowed) in Settings,
 ;   more reliable DJ track click (hover before click), Arcade card image path
-;   fix (".png.png"), Night 4 code cleanup.
+;   fix (".png.png"), Night 4 code cleanup, Hacker clone retry wait set in
+;   Settings (OFF / 2x, 1.5x automatic), Night end-screen skip watcher.
 ;   See MODIFICATIONS.md in the repository root for details.
 ;   Licensed under GPLv3, same as the original.
 ; ---------------------------------------------------------------------------
@@ -313,6 +314,10 @@ if (TimeScaleMode = "1.5x") {
 global UpgradeDelay := IniRead(SettingsFile, "Options", "UpgradeDelay", 200)
 ; Drop the Beat cooldown in seconds (decimals allowed, e.g. 28.5). Modified-version setting.
 global BeatCooldown := ParseBeatCooldown(IniRead(SettingsFile, "Options", "BeatCooldown", 28))
+; Hacker clone retry wait in seconds after a failed clone. Modified-version settings:
+; one value for timescale OFF and one for 2x. 1.5x is calculated (OFF value / 1.5).
+global CloneRetryOff := ParseCloneRetry(IniRead(SettingsFile, "Options", "CloneRetryOff", "4.65"), "4.65")
+global CloneRetry2x := ParseCloneRetry(IniRead(SettingsFile, "Options", "CloneRetry2x", "1.25"), "1.25")
 
 global gamemap := "", difficulty := "", requiredTowers := "", eventDifficulty := ""
 global CurrentStrategyFile := ""
@@ -1815,6 +1820,18 @@ MainGui.SetFont("s9 w400 cFFFFFF", UIFont())
 global Tab5_HelpBeatCD := MainGui.Add("Text", "x195 y207 w18 h18 0x200 Center Hidden", "?")
 Tab5_HelpBeatCD.OnEvent("Click", HelpBeatCooldown)
 
+MainGui.SetFont("s8 w400 cAAAAAA")
+global Tab5_LblCloneOff := MainGui.Add("Text", "x30 y231 w95 h16 Hidden", "Clone Retry OFF:")
+MainGui.SetFont("s8 w400 c000000")
+global CloneRetryOffCtrl := MainGui.Add("Edit", "x127 y228 w36 h18 Center Limit5 Hidden", CloneRetryOff)
+MainGui.SetFont("s8 w400 cAAAAAA")
+global Tab5_LblClone2x := MainGui.Add("Text", "x167 y231 w20 h16 Hidden", "2x:")
+MainGui.SetFont("s8 w400 c000000")
+global CloneRetry2xCtrl := MainGui.Add("Edit", "x188 y228 w36 h18 Center Limit5 Hidden", CloneRetry2x)
+MainGui.SetFont("s9 w400 cFFFFFF", UIFont())
+global Tab5_HelpCloneRetry := MainGui.Add("Text", "x228 y228 w18 h18 0x200 Center Hidden", "?")
+Tab5_HelpCloneRetry.OnEvent("Click", HelpCloneRetry)
+
 MainGui.SetFont("s9 w400 cAAAAAA")
 global Tab5_Lbl99 := MainGui.Add("Text", "x183 y248 BackgroundTrans Hidden", "cancel:")
 MainGui.SetFont("s8 w400 c000000")
@@ -2420,6 +2437,7 @@ ShowTabContent(tab) {
         for ctrl in [Tab5_Section1, Tab5_Line1, Tab5_Lbl1, ChainKeyCtrl,
             Tab5_Lbl2, BeatKeyCtrl, Tab5_Lbl3, CaravanKeyCtrl,
             Tab5_LblBeatCD, BeatCooldownCtrl, Tab5_HelpBeatCD,
+            Tab5_LblCloneOff, CloneRetryOffCtrl, Tab5_LblClone2x, CloneRetry2xCtrl, Tab5_HelpCloneRetry,
             Tab5_Lbl44, RaiseDeadKeyCtrl, Tab5_Lbl55, Tab5_Lbl56, HologramKeyCtrl, RepoKeyCtrl,
             Tab5_Lbl99, Tab5_LblUPG, Tab5_LblUPGBTM, CancelPlacementKeyCtrl, UpgradeTowerGCtrl, UpgradeTowerGBCtrl,
             Tab1_Lbl3, Tab1_Lbl4, TimeScaleModeCtrl, UpgradeDelayCtrl,
@@ -2445,6 +2463,8 @@ ShowTabContent(tab) {
         ChainKeyCtrl.Value := ChainKey
         BeatKeyCtrl.Value := BeatKey
         BeatCooldownCtrl.Value := BeatCooldown
+        CloneRetryOffCtrl.Value := CloneRetryOff
+        CloneRetry2xCtrl.Value := CloneRetry2x
         CaravanKeyCtrl.Value := CaravanKey
         RaiseDeadKeyCtrl.Value := RaiseDeadKey
         HologramKeyCtrl.Value := HologramKey
@@ -2517,9 +2537,11 @@ ShowSettingsPage(advanced := false) {
     global MouseSpeedLbl, MouseSpeedTxt, MouseSpeedUpDown, MouseDelayLbl, MouseDelayTxt, MouseDelayUpDown
     global KeyDelayLbl, KeyDelayTxt, KeyDelayUpDown
     global Tab5_LblBeatCD, BeatCooldownCtrl, Tab5_HelpBeatCD
+    global Tab5_LblCloneOff, CloneRetryOffCtrl, Tab5_LblClone2x, CloneRetry2xCtrl, Tab5_HelpCloneRetry
 
     common := [Tab5_Section1, Tab5_Line1, Tab5_Lbl1, ChainKeyCtrl, Tab5_Lbl2, BeatKeyCtrl, Tab5_Lbl3, CaravanKeyCtrl,
         Tab5_LblBeatCD, BeatCooldownCtrl, Tab5_HelpBeatCD,
+        Tab5_LblCloneOff, CloneRetryOffCtrl, Tab5_LblClone2x, CloneRetry2xCtrl, Tab5_HelpCloneRetry,
         Tab5_Lbl44, RaiseDeadKeyCtrl, Tab5_Lbl55, Tab5_Lbl56, HologramKeyCtrl, RepoKeyCtrl, Tab5_Lbl99, Tab5_LblUPG,
         Tab5_LblUPGBTM, CancelPlacementKeyCtrl, UpgradeTowerGCtrl, UpgradeTowerGBCtrl, Tab1_Lbl3, Tab1_Lbl4,
         TimeScaleModeCtrl, UpgradeDelayCtrl, Tab5_Section2, Tab5_Line2, Tab5_Help6, UseRestartBtnCtrl, Tab5_Help4,
@@ -4303,6 +4325,13 @@ ChangeTargets(towerID, target) {
 CloneTower(towerId, x, y, wait := 0) {
     global Towers, unfocusX, unfocusY, LastOpenedTowerID, CancelPlacementKey, HologramKey, Recording, canUseAbility
 
+    ; Modified version: the retry wait after a failed clone (cooldown, no cash,
+    ; stunned, cannot place) was a fixed 4650 ms. It now comes from Settings:
+    ; "Clone Retry OFF" (default 4.65 s) and "2x" (default 1.25 s); 1.5x uses
+    ; OFF / 1.5. See GetCloneRetryMs().
+    cloneRetryMs := GetCloneRetryMs()
+    cloneRetryText := Format("{:.2f}", cloneRetryMs / 1000)
+
     if (!Towers.Has(towerID)) {
         LogToConsole("Tower " towerID " not found!")
         return false
@@ -4333,9 +4362,9 @@ CloneTower(towerId, x, y, wait := 0) {
 
         if (ImageSearch(&fx, &fy, x1, y1, x2, y2, "*Trans000000 *50 " A_WorkingDir "/Resources/hologram_tower_cooldown.png"
         ) || ReadMessage(["hologram", "ability", "is on", "cooldown", "hol%ram%", "ility"])) {
-            LogToConsole("Failed to clone " towerId "! (hologram cooldown) Retrying again in 5 seconds...")
+            LogToConsole("Failed to clone " towerId "! (hologram cooldown) Retrying again in " cloneRetryText " seconds...")
             canUseAbility := true
-            Sleep 4650
+            Sleep cloneRetryMs
             canUseAbility := false
             continue
         }
@@ -4386,9 +4415,9 @@ CloneTower(towerId, x, y, wait := 0) {
 
         if (ImageSearch(&fx, &fy, x1, y1, x2, y2, "*Trans000000 *50 " A_WorkingDir "/Resources/no_cash_cloning.png") ||
         ReadMessage(["don't", "have", "enough", "cash", "clone", "this"])) {
-            LogToConsole("Failed to clone " towerId "! (no cash) Retrying again in 5 seconds...")
+            LogToConsole("Failed to clone " towerId "! (no cash) Retrying again in " cloneRetryText " seconds...")
             canUseAbility := true
-            Sleep 4650
+            Sleep cloneRetryMs
             canUseAbility := false
             continue
         }
@@ -4417,9 +4446,9 @@ CloneTower(towerId, x, y, wait := 0) {
         if (ImageSearch(&fx, &fy, x1, y1, x2, y2, "*Trans000000 *50 " A_WorkingDir "/Resources/stunned.png") ||
         ReadMessage(["error", "that", "cannot", "cann", "activated", "while", "stunned"], , ["need", "more", "to"],
         "\$|\d")) {
-            LogToConsole("Failed to clone " towerId "! (hacker is stunned) Retrying again in 5 seconds...")
+            LogToConsole("Failed to clone " towerId "! (hacker is stunned) Retrying again in " cloneRetryText " seconds...")
             canUseAbility := true
-            Sleep 4650
+            Sleep cloneRetryMs
             canUseAbility := false
             continue
         }
@@ -4427,9 +4456,9 @@ CloneTower(towerId, x, y, wait := 0) {
         if (ImageSearch(&fx, &fy, x1, y1, x2, y2, "*Trans000000 *50 " A_WorkingDir "/Resources/cannot_place_here.png") ||
         ReadMessage(["cannot", "here", "hereg", "herd", "her", "here!", "cann", "cannd", "he", "h", "hed"], , ["need",
             "more", "to"], "\$|\d")) {
-            LogToConsole("Failed to clone " towerId "! (cannot place here!) Retrying again in 5 seconds...")
+            LogToConsole("Failed to clone " towerId "! (cannot place here!) Retrying again in " cloneRetryText " seconds...")
             canUseAbility := true
-            Sleep 4650
+            Sleep cloneRetryMs
             canUseAbility := false
             continue
         } else {
@@ -4959,7 +4988,7 @@ SaveAllSettings(ctrl, *) {
     global DefaultMouseSpeed, MouseDelay, KeyDelay
     global HoloKey, RaiseDeadKey, ChangeTargetsKey, HologramKey, RepoKey, CollectPlaytimeRewards, UpgradeTowerGKey,
         UpgradeTowerGBKey, UseHForUpgrade, UseNumbersForHotbar
-    global UpgradeDelay, BeatCooldown
+    global UpgradeDelay, BeatCooldown, CloneRetryOff, CloneRetry2x
 
     tempChainKey := SubStr(RegExReplace(ChainKeyCtrl.Value, "\s", ""), 1, 1)
     tempBeatKey := SubStr(RegExReplace(BeatKeyCtrl.Value, "\s", ""), 1, 1)
@@ -5073,6 +5102,10 @@ SaveAllSettings(ctrl, *) {
 
     BeatCooldown := ParseBeatCooldown(BeatCooldownCtrl.Value)
     BeatCooldownCtrl.Value := BeatCooldown
+    CloneRetryOff := ParseCloneRetry(CloneRetryOffCtrl.Value, "4.65")
+    CloneRetryOffCtrl.Value := CloneRetryOff
+    CloneRetry2x := ParseCloneRetry(CloneRetry2xCtrl.Value, "1.25")
+    CloneRetry2xCtrl.Value := CloneRetry2x
 
     IniWrite(ChainKey, SettingsFile, "Hotkeys", "Chain")
     IniWrite(BeatKey, SettingsFile, "Hotkeys", "Beat")
@@ -5101,6 +5134,8 @@ SaveAllSettings(ctrl, *) {
     IniWrite(KeyDelay, SettingsFile, "Options", "KeyDelay")
     IniWrite(UpgradeDelay, SettingsFile, "Options", "UpgradeDelay")
     IniWrite(BeatCooldown, SettingsFile, "Options", "BeatCooldown")
+    IniWrite(CloneRetryOff, SettingsFile, "Options", "CloneRetryOff")
+    IniWrite(CloneRetry2x, SettingsFile, "Options", "CloneRetry2x")
 
     IniWrite(PlaceTowerKey, SettingsFile, "RecordingHotkeys", "PlaceTowerKey")
     IniWrite(UpgradeTowerKey, SettingsFile, "RecordingHotkeys", "UpgradeTowerKey")
@@ -5441,6 +5476,33 @@ ParseBeatCooldown(value) {
     if (seconds < 1)
         return 28
     return Min(seconds, 600)
+}
+
+HelpCloneRetry(*) {
+    ModernMsgBox("Info", "How many seconds the macro waits before trying a Hacker clone again after it fails (no cash, hologram cooldown, stunned, or cannot place here).`n`nOFF = timescale off (default 4.65).`n2x = timescale 2x (default 1.25).`n1.5x is calculated automatically: OFF value / 1.5.`n`nDecimals are allowed (0.25 - 30). Each attempt also needs about 1.5 - 3 seconds of mouse movement on top of this wait.", "OK")
+}
+
+; Parses a clone retry wait (seconds) from the settings file or a Settings field.
+; Accepts "1.25" or "1,25". Empty or invalid input falls back to `default`; the
+; result is clamped to 0.25-30 seconds and returned as clean text (no float noise).
+ParseCloneRetry(value, default) {
+    text := StrReplace(Trim(String(value)), ",", ".")
+    if (text = "" || !IsNumber(text) || Number(text) <= 0)
+        return default
+    seconds := Min(Max(Number(text), 0.25), 30)
+    text := RTrim(Format("{:.2f}", seconds), "0")
+    return RTrim(text, ".")
+}
+
+; Real-time milliseconds to wait before the next clone attempt:
+; timescale OFF -> CloneRetryOff, 2x -> CloneRetry2x, 1.5x -> CloneRetryOff / 1.5.
+GetCloneRetryMs() {
+    global CloneRetryOff, CloneRetry2x, TimescaleActive, TimeScaleMultiplier
+    if (TimescaleActive && TimeScaleMultiplier = 2)
+        return Max(100, Round(CloneRetry2x * 1000))
+    if (TimescaleActive && TimeScaleMultiplier > 1)
+        return Max(100, Round(CloneRetryOff * 1000 / TimeScaleMultiplier))
+    return Max(100, Round(CloneRetryOff * 1000))
 }
 HelpCaravan(*) {
     ModernMsgBox("Info", "Configure hotkey for the 'Support Caravan'.", "OK")
@@ -5783,15 +5845,15 @@ PlayStrategy() {
     LogToConsole("All strategy steps completed...")
     MacroPhase("waiting_result", 7200000)
     if (IsNightMode()) {
-        ; After the last strategy step, look again for the skip button (2 minutes max).
-        LogToConsole("Night strategy completed: searching for the skip button (2 min max)...")
-        if SkipNightCutscene(120000) {
-            if ClickNightReturnToLobby() {
-                LogToConsole("Returned to lobby: starting the Night strategy again in 10 seconds...")
-                Sleep(10000)
-                RunStrategy("", true)
-                return
-            }
+        ; Modified version: keep watching (15 minutes max) and hold every skip button
+        ; that appears until Return To Lobby is clicked. The old code tried the skip
+        ; once (2 minutes max), waited 30 s for Return To Lobby, then went idle, so
+        ; the real end cutscene after the boss was never skipped.
+        if FinishNightMatch(900000) {
+            LogToConsole("Returned to lobby: starting the Night strategy again in 10 seconds...")
+            Sleep(10000)
+            RunStrategy("", true)
+            return
         }
     }
     loop {
@@ -6894,18 +6956,127 @@ SkipNightCutscene(timeoutMs := 60000) {
             RuntimeLogWarn("night_skip_timeout", "Night cutscene skip button never appeared")
             return false
         }
-        if !getRobloxPos(, , &rw, &rh)
+        if !FindNightSkipButton(&res)
             return false
-        res := AdvancedImageSearch("Resources/hold_to_skip.png", 0, 0, rw, rh)
         if (res.status = "success" && res.score >= 0.67) {
-            ActivateRoblox()
-            Click(res.x, res.y, "Down")
-            Sleep(5500)
-            Click(res.x, res.y, "Up")
-            RuntimeLogInfo("night_skip_held", "Held the Night cutscene skip button", "score=" res.score)
+            ; Modified version: hover first and verify the hold, retrying up to 3 times
+            ; (see HoldNightSkipButton). Like the original, a finished hold counts as
+            ; done even if the button is still visible, so this never reloads the match.
+            HoldNightSkipButton(res)
             return true
         }
         Sleep(300)
+    }
+}
+
+; Searches the Roblox client for the "HOLD TO SKIP" button. Returns false only when
+; the Roblox client geometry is unavailable; `res` carries the search result.
+FindNightSkipButton(&res) {
+    res := { status: "failed", score: 0, x: 0, y: 0 }
+    if !getRobloxPos(, , &rw, &rh)
+        return false
+    res := AdvancedImageSearch("Resources/hold_to_skip.png", 0, 0, rw, rh)
+    return true
+}
+
+; Modified version: holds the Night "HOLD TO SKIP" button and checks that it worked.
+; - Hover first (move, wait, nudge 1px): Roblox can ignore a press that arrives the
+;   same instant the mouse does.
+; - Hold at least 5.5 s (the original duration), then check every 0.5 s whether the
+;   button is gone and release as soon as it is, holding at most 8 s.
+; - After releasing, check again. If the button is still there, try again (max 3).
+; Returns true when the button is gone after a hold.
+HoldNightSkipButton(res) {
+    loop 3 {
+        attempt := A_Index
+        ActivateRoblox()
+        MouseMove(res.x, res.y)
+        Sleep(150)
+        MouseMove(res.x + 1, res.y)
+        Sleep(50)
+        MouseMove(res.x, res.y)
+        Sleep(50)
+        Click(res.x, res.y, "Down")
+
+        holdStart := A_TickCount
+        loop {
+            Sleep(500)
+            heldMs := A_TickCount - holdStart
+            if (heldMs >= 8000)
+                break
+            if (heldMs >= 5500) {
+                if !FindNightSkipButton(&during)
+                    break
+                if !(during.status = "success" && during.score >= 0.67)
+                    break
+            }
+        }
+        Click(res.x, res.y, "Up")
+        heldMs := A_TickCount - holdStart
+
+        Sleep(700)
+        if !FindNightSkipButton(&after)
+            return false
+        if !(after.status = "success" && after.score >= 0.67) {
+            RuntimeLogInfo("night_skip_held", "Held the Night cutscene skip button and it disappeared",
+                "score=" res.score "; attempt=" attempt "; held_ms=" heldMs)
+            return true
+        }
+
+        RuntimeLogWarn("night_skip_still_visible", "Skip button is still visible after holding; retrying",
+            "attempt=" attempt "; held_ms=" heldMs "; score=" after.score)
+        LogToConsole("Skip button still visible after holding (attempt " attempt "/3). Holding again...")
+        res := after
+    }
+    return false
+}
+
+; Modified version: after the last strategy step of a Night match, keep watching the
+; screen until Return To Lobby is clicked, instead of trying the skip only once.
+; Every pass: Return To Lobby visible -> click it (and verify); HOLD TO SKIP visible ->
+; hold it with HoldNightSkipButton(). This also covers boss cutscenes that appear
+; before the match actually ends. Returns true once Return To Lobby was clicked.
+FinishNightMatch(timeoutMs := 900000) {
+    LogToConsole("Night strategy completed: watching for the skip button and Return To Lobby ("
+        Round(timeoutMs / 60000) " min max)...")
+    deadline := A_TickCount + timeoutMs
+    skipsHeld := 0
+    loop {
+        if (A_TickCount > deadline) {
+            RuntimeLogWarn("night_finish_timeout", "Night end screen was not completed in time",
+                "skips_held=" skipsHeld)
+            LogToConsole("Night end screen not completed in " Round(timeoutMs / 60000) " minutes.", true)
+            return false
+        }
+        if !getRobloxPos(, , &rw, &rh)
+            return false
+
+        lobby := AdvancedImageSearch("Resources/return_to_lobby.png", 0, 0, rw, rh)
+        if (lobby.status = "success" && lobby.score >= 0.67) {
+            ActivateRoblox()
+            MouseMove(lobby.x, lobby.y)
+            Sleep(150)
+            Click(lobby.x, lobby.y)
+            Sleep(1500)
+            check := AdvancedImageSearch("Resources/return_to_lobby.png", 0, 0, rw, rh)
+            if !(check.status = "success" && check.score >= 0.67) {
+                RuntimeLogInfo("night_return_lobby_clicked", "Clicked Night Return To Lobby button",
+                    "score=" lobby.score "; skips_held=" skipsHeld)
+                return true
+            }
+            RuntimeLogWarn("night_return_lobby_still_visible", "Return To Lobby is still visible after clicking; retrying")
+            continue
+        }
+
+        if !FindNightSkipButton(&skip)
+            return false
+        if (skip.status = "success" && skip.score >= 0.67) {
+            LogToConsole("Night: skip button found, holding it...")
+            if HoldNightSkipButton(skip)
+                skipsHeld++
+            continue
+        }
+        Sleep(500)
     }
 }
 

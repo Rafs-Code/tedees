@@ -39,6 +39,32 @@ Same as `TDS_Macro_Night3HardMode/` item 2.
 ### 4. Offline dependencies and notice
 - Same as `TDS_Macro_Night3HardMode/` items 3 and 4: `lib/OCR.ahk` and `lib/JSON.ahk` are committed, and `Main.ahk` has a modified-version notice. The original credit comment and the in-app Credits tab are unchanged.
 
+## November 20, 2026
+
+### 5. Hacker clone retry wait: set in Settings
+- **Before:** every failed clone attempt (hologram cooldown, not enough cash, Hacker stunned, cannot place here) waited a fixed 4650 ms in real time, about 9.3 seconds of game time at 2x.
+- **After:**
+  - New row in the **Settings** tab (below Beat Cooldown): **"Clone Retry OFF:"** and **"2x:"**, plus a `?` help button.
+  - **Timescale OFF:** waits the OFF value (default **4.65 s**, same as before).
+  - **Timescale 2x:** waits the 2x value (default **1.25 s**).
+  - **Timescale 1.5x:** no setting, calculated automatically as OFF value / 1.5 (default 3.10 s).
+  - Decimals allowed (`1.25` or `1,25`), range 0.25–30 s. Saved as `CloneRetryOff` and `CloneRetry2x` in `[Options]` of the settings file.
+  - `CloneTower()` uses the new `GetCloneRetryMs()`, and the log shows the actual wait (for example `Retrying again in 1.25 seconds...`).
+- The UI waits inside the clone (hover scan, 0.3 s after the Hologram key, and so on) are unchanged, because Roblox draws its UI in real time. Each attempt therefore takes the retry wait plus about 1.5–3 s of mouse movement.
+
+### 6. Night end: keep watching until Return To Lobby
+- **Before:** after the last strategy step, `PlayStrategy()` called `SkipNightCutscene(120000)` once, then `ClickNightReturnToLobby()` (30 s). If Return To Lobby didn't appear, the macro went idle for the rest of the match. In one Night 4 run it held a skip button 7 s after the last step, gave up on Return To Lobby 30 s later, and the real end cutscene after the Umbra boss was never skipped.
+- **After:** new `FinishNightMatch(900000)` loops for up to 15 minutes. Each pass: if Return To Lobby is visible, click it (hover first) and check that it disappeared; if HOLD TO SKIP is visible, hold it. It keeps going after mid-match cutscenes until Return To Lobby is clicked. `ClickNightReturnToLobby()` is no longer called.
+
+### 7. Night skip hold: hover first and verify
+- **Before:** `SkipNightCutscene()` pressed the button with `Click(x, y, "Down")` (move and press in the same instant), held a fixed 5.5 s, and reported success without checking.
+- **After:** new `HoldNightSkipButton()`:
+  - Hovers first (move, wait 150 ms, nudge 1 px), then presses.
+  - Holds at least 5.5 s, then checks every 0.5 s and releases as soon as the button is gone (max 8 s).
+  - After releasing, checks again. If the button is still visible, it holds again (max 3 attempts).
+- Used both for the intro skip at match start and for the end-of-match watcher. At match start a finished hold still counts as done, like before, so it never causes a reload.
+- Abilities (Drop the Beat, and so on) are **not** paused during the hold.
+
 ### Checks run
 - AutoHotkey v2 `/validate` passes (installed and bundled `AutoHotkey64.exe`).
 - Upstream `tests/test_source_contracts.py` and `tests/lint_strategies.py` pass, and the DJ/ability checks in `tests/test_reported_runtime_fixes.py` pass.
