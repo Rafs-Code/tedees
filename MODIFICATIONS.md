@@ -134,6 +134,14 @@ All changes are in `TDS_Macro/Main.ahk`. Other files are unchanged from the orig
 ### 4. Modification notice
 - Added a short comment at the top of `Main.ahk` saying this is a modified version. The original credit comment from Darksen was left **unchanged**.
 
+## November 22, 2026
+
+### 5. Character reset after the map loads (Dead Ahead)
+- **Problem:** after a TDS update (when the Solar Requiem event ended), the Molten Dead Ahead strategy placed its first tower in the wrong spot. The same strategy, macro code, Windows scaling, and Roblox window size (1920x1009) had worked many times on November 19, so the game view at match start had changed. In 1.3.3 the macro walks the character to the map board during map selection and goes straight to the camera alignment afterwards, so if the character no longer starts from the spawn point, every tower coordinate is off.
+- **After:** new list `ResetAfterMapLoadMaps` (currently `["Dead Ahead"]`). On a fresh join to one of these maps, `RunStrategy()` now resets the character (Esc, R, Enter), waits 7.5 s for the respawn, then does the map check, camera alignment, timescale, and Ready as before. Not used on Restart (`IsRestarting`), same as the camera alignment.
+- To use it on another map, add the map name to `ResetAfterMapLoadMaps` near the top of `Main.ahk`.
+- Not tested in-game yet.
+
 ---
 
 ## Known issues (not yet changed)

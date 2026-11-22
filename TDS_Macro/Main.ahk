@@ -13,7 +13,8 @@
 ; MODIFIED VERSION (November 2026) - this is not the original release.
 ;   Based on Ultimate Macro v1.3.3 by Darksen (https://github.com/DarksenDev/tds-macro).
 ;   Changes: configurable Drop the Beat cooldown, Drop the Beat no longer
-;   blocked by Support Caravan, more reliable DJ track click.
+;   blocked by Support Caravan, more reliable DJ track click, character reset
+;   after the map loads on Dead Ahead (ResetAfterMapLoadMaps).
 ;   See MODIFICATIONS.md in the repository root for details.
 ;   Licensed under GPLv3, same as the original.
 ; ---------------------------------------------------------------------------
@@ -207,6 +208,13 @@ global autoChain := "OFF", autoCaravan := "OFF", autoDropTheBeat := "OFF"
 global Commander := false, AutoSkip := "ON", AbilitySpam := "ON"
 
 global SpecialMaps := ["Simplicity", "Cataclysm"]
+
+; Modified version: on these maps the character is respawned (reset) after the map
+; has loaded and before the map check / camera alignment, so the strategy always
+; starts from the spawn point like when it was recorded. Added after a TDS update in
+; which Dead Ahead placements landed in the wrong spots. Add more map names here if
+; another map shows the same problem.
+global ResetAfterMapLoadMaps := ["Dead Ahead"]
 
 global MoveEnabled := false, MoveDirection := "W", MoveDuration := 750
 global unfocusX := 150, unfocusY := 200
@@ -4274,6 +4282,13 @@ RunStrategy(stratFile := "", skipRestart := false) {
     }
 
     if (!IsRestarting) {
+        if (InArray(ResetAfterMapLoadMaps, gamemap)) {
+            ; Modified version: respawn at the map's spawn point first, then wait for
+            ; the respawn (same 7.5 s the map selection uses) before aligning.
+            ActivateRoblox()
+            resetCharacter()
+            Sleep(7500)
+        }
         CheckTheMapF()
         if (!InArray(SpecialMaps, gamemap)) {
             AlignCamera()
