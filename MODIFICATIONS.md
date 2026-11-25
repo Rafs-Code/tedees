@@ -65,6 +65,12 @@ Same as `TDS_Macro_Night3HardMode/` item 2.
 - Used both for the intro skip at match start and for the end-of-match watcher. At match start a finished hold still counts as done, like before, so it never causes a reload.
 - Abilities (Drop the Beat, and so on) are **not** paused during the hold.
 
+## November 26, 2026
+
+### 8. Timescale state is reset every match
+- **Before:** `TimescaleActive` was set to `true` after the first successful timescale ticket and never set back to `false`. When a later match had no tickets left, the macro still divided the Drop the Beat, Call of Arms, and Support Caravan timings by the multiplier and used the 2x clone retry, while the game ran at 1x.
+- **After:** `activateTimescale()` (called once per match) sets `TimescaleActive := false` first and sets it to `true` only after the ticket is confirmed. When tickets are out, the log also says that 1x timings are used for this match. The match still continues without timescale, as before.
+
 ### Checks run
 - AutoHotkey v2 `/validate` passes (installed and bundled `AutoHotkey64.exe`).
 - Upstream `tests/test_source_contracts.py` and `tests/lint_strategies.py` pass, and the DJ/ability checks in `tests/test_reported_runtime_fixes.py` pass.

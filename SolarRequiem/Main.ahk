@@ -8346,6 +8346,13 @@ waitReady() {
 activateTimescale() {
     global UseTimeScale, TimeScaleMode, TimeScaleMultiplier, difficulty, SettingsFile, AutorunStartTime,
         MultiplayerEnabled, TimescaleActive
+
+    ; Modified version: every match starts as "timescale not active", and the flag
+    ; is set again only after a ticket is confirmed below. Previously it stayed true
+    ; for the rest of the session after the first successful ticket, so a match
+    ; without tickets still used the shortened ability and clone timings at 1x.
+    TimescaleActive := false
+
     if (MultiplayerEnabled) {
         return true
     }
@@ -8381,6 +8388,7 @@ activateTimescale() {
         if (res.status = "success" && res.score >= 0.67) {
             Click(res.x, res.y + 55)
             LogToConsole("Failed to activate timescale! You are out of tickets.", true, false)
+            LogToConsole("Timescale is not active for this match: ability and clone timings use 1x.")
 
         } else {
             confirmClicked := false
